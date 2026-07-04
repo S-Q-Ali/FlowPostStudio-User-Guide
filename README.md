@@ -126,7 +126,7 @@ Choose when to publish:
 The file is uploaded and publishing begins immediately. You will be redirected to the Queue to monitor progress.
 
 **Schedule**
-Pick a future date and time. The video will be published automatically at the scheduled time via our cron-based scheduler (runs every 5 minutes).
+Pick a future date and time. The video will be published automatically at the scheduled time.
 
 ![Publish options]
 
@@ -268,14 +268,13 @@ You can optionally set different time windows for specific days of the week, ove
 
 #### Step 5 — Activate
 
-Toggle the workflow to **Active**. The system will begin checking the sheet on its schedule (cron runs every 5 minutes).
+Toggle the workflow to **Active**. The system will begin checking the sheet on its schedule.
 
 ### Processing Behavior
 
-- The cron-based processor (`process-workflow`) checks all active workflows every 5 minutes
 - Only rows with `status = "ready to post"` are processed
-- After processing, the sheet cell is updated to **"posted"** or **"failed"**
-- Multiple workflows can run concurrently without interfering (uses `workflow_locks`)
+- After processing, the sheet status is updated to **"posted"** or **"failed"**
+- Multiple workflows can run independently
 - Manual runs can be triggered from the Workflows page for immediate processing
 
 ### Best Practices
@@ -329,7 +328,7 @@ The Accounts page manages all your social media connections.
 
 ### Token Expiry
 
-OAuth tokens expire periodically. FlowPost automatically attempts to refresh tokens when possible. If a token cannot be refreshed, you will see a notification prompting you to reconnect the account. All tokens are encrypted at rest using AES-256 encryption.
+OAuth tokens expire periodically. FlowPost automatically attempts to refresh tokens when possible. If a token cannot be refreshed, you will see a notification prompting you to reconnect the account.
 
 ---
 
@@ -339,21 +338,20 @@ OAuth tokens expire periodically. FlowPost automatically attempts to refresh tok
 
 | Symptom | Likely Cause | Solution |
 |---|---|---|
-| "Failed to obtain upload URL" | R2 credentials misconfigured | Check R2 endpoint and keys in Supabase secrets |
+| "Failed to obtain upload URL" | System configuration issue | Contact the administrator |
 | File rejected | Unsupported format | Use MP4/MOV (video) or JPEG/PNG (image) |
-| Upload stalls at 0% | CORS issue | Verify `ALLOWED_ORIGIN` matches your frontend URL |
+| Upload stalls at 0% | System configuration issue | Contact the administrator |
 | "File too large" | Exceeds 500 MB limit | Compress the file or split into shorter clips |
 
 ### Post Stuck on "Processing" or "Publishing"
 
-Posts can remain in these states if the edge function encounters an error.
+Posts can remain in these states if an error occurs during publishing.
 
-1. Check the **edge function logs** in **Supabase Dashboard → Edge Functions → [function name] → Logs**
-2. Common causes:
-   - **OAuth token expired** — Reconnect the account in Accounts page
-   - **File URL inaccessible** — Verify the file is still in R2 or Google Drive
-   - **API quota exceeded** — Check your platform's API usage limits
-   - **Instagram not ready** — Instagram Reels require a media container to finish processing before publishing. FlowPost polls up to 8 times with 30-second intervals (4 minutes total) before failing.
+Common causes:
+- **OAuth token expired** — Reconnect the account in Accounts page
+- **File URL inaccessible** — Verify the file is still accessible
+- **API quota exceeded** — Check your platform's API usage limits
+- **Instagram still processing** — Instagram Reels require processing before publishing. FlowPost waits up to 4 minutes, checking periodically, before reporting a failure.
 
 ### Retrying Failed Posts
 
@@ -361,8 +359,8 @@ If a post fails, you can retry it from the Queue page:
 
 1. Navigate to **Queue** and filter by **Failed**
 2. Click the **retry icon** (circular arrow) next to the failed post
-3. The post is re-scheduled for 1 minute later and will be picked up by the cron scheduler
-4. **24-hour limit** — Retry is only available within 24 hours of the original upload. After that, the file is removed from storage by our lifecycle policy.
+3. The post is re-scheduled for retry shortly after
+4. **24-hour limit** — Retry is only available within 24 hours of the original upload. After that, the file is removed from storage.
 
 ### OAuth Errors
 
@@ -372,22 +370,14 @@ If a post fails, you can retry it from the Queue page:
 | "Access token not found" | Reconnect the account |
 | "Token refresh failed" | The refresh token may have expired. Reconnect the account |
 
-### CORS Errors in Browser Console
-
-If you see CORS errors in the browser developer console:
-
-1. Verify `ALLOWED_ORIGIN` is set in **Supabase Dashboard → Edge Functions → Secrets**
-2. It should match your frontend URL exactly (e.g., `https://flowpost-studio.vercel.app`)
-3. If using a preview/Vercel deployment URL, add it to `ALLOWED_ORIGIN`
-
 ### Google Sheets Workflow Not Triggering
 
 | Symptom | Solution |
 |---|---|
-| Workflow is active but nothing happens | Check that the trigger window includes the current UTC hour and the correct scheduling mode is selected |
-| "Failed to read sheet" error | Verify the service account has access to the Google Sheet |
+| Workflow is active but nothing happens | Check that the trigger window includes the current hour and the correct scheduling mode is selected |
+| "Failed to read sheet" error | Ensure the Google Sheet is shared with the FlowPost system |
 | Rows not being processed | Ensure row status is exactly **`ready to post`** (lowercase) |
-| File not found | Verify the URL is correct and the service account has access |
+| File not found | Verify the URL is correct and the file is accessible |
 | Wrong caption used | Ensure you are using the correct column: `fb_ig_caption` for videos, `image_fb_ig_caption` for images |
 
 ### TikTok-Specific Issues
@@ -400,4 +390,4 @@ If you see CORS errors in the browser developer console:
 
 ### Getting Help
 
-If you encounter issues not covered here, check the edge function logs in the Supabase Dashboard for detailed error messages. Each error log includes a stack trace and request context to help diagnose the problem.
+If you encounter issues not covered here, contact the administrator with the post ID and any error message shown in the app.
