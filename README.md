@@ -280,9 +280,9 @@ Toggle the workflow to **Active**. The system will begin checking the sheet on i
 ### Best Practices
 
 - Keep video files under 500 MB
-- Use Google Drive share links that are accessible by the service account
 - Only mark rows as "ready to post" when the file is finalized
 - For image workflows, ensure `image_url` columns contain direct image URLs
+- **[Admin]** Ensure Google Drive share links are accessible by the system
 
 ---
 
@@ -338,9 +338,9 @@ OAuth tokens expire periodically. FlowPost automatically attempts to refresh tok
 
 | Symptom | Likely Cause | Solution |
 |---|---|---|
-| "Failed to obtain upload URL" | System configuration issue | Contact the administrator |
+| "Failed to obtain upload URL" | R2 credentials misconfigured | **[Admin]** Check R2 endpoint and keys in Supabase secrets |
 | File rejected | Unsupported format | Use MP4/MOV (video) or JPEG/PNG (image) |
-| Upload stalls at 0% | System configuration issue | Contact the administrator |
+| Upload stalls at 0% | CORS issue | **[Admin]** Verify `ALLOWED_ORIGIN` matches the frontend URL in Supabase secrets |
 | "File too large" | Exceeds 500 MB limit | Compress the file or split into shorter clips |
 
 ### Post Stuck on "Processing" or "Publishing"
@@ -352,6 +352,8 @@ Common causes:
 - **File URL inaccessible** — Verify the file is still accessible
 - **API quota exceeded** — Check your platform's API usage limits
 - **Instagram still processing** — Instagram Reels require processing before publishing. FlowPost waits up to 4 minutes, checking periodically, before reporting a failure.
+
+If none of the above apply, **[Admin]** check the edge function logs in the Supabase Dashboard for the full error details.
 
 ### Retrying Failed Posts
 
@@ -366,7 +368,7 @@ If a post fails, you can retry it from the Queue page:
 
 | Error | Solution |
 |---|---|
-| "Google hasn't verified this app" | The Google OAuth consent screen is in testing mode. Add your email as a test user in Google Cloud Console. |
+| "Google hasn't verified this app" | **[Admin]** The Google OAuth consent screen is in testing mode. Add the user's email as a test user in Google Cloud Console. |
 | "Access token not found" | Reconnect the account |
 | "Token refresh failed" | The refresh token may have expired. Reconnect the account |
 
@@ -375,7 +377,7 @@ If a post fails, you can retry it from the Queue page:
 | Symptom | Solution |
 |---|---|
 | Workflow is active but nothing happens | Check that the trigger window includes the current hour and the correct scheduling mode is selected |
-| "Failed to read sheet" error | Ensure the Google Sheet is shared with the FlowPost system |
+| "Failed to read sheet" error | **[Admin]** Ensure the Google Sheet is shared with the service account |
 | Rows not being processed | Ensure row status is exactly **`ready to post`** (lowercase) |
 | File not found | Verify the URL is correct and the file is accessible |
 | Wrong caption used | Ensure you are using the correct column: `fb_ig_caption` for videos, `image_fb_ig_caption` for images |
@@ -390,4 +392,4 @@ If a post fails, you can retry it from the Queue page:
 
 ### Getting Help
 
-If you encounter issues not covered here, contact the administrator with the post ID and any error message shown in the app.
+If you encounter issues not covered here, **[Admin]** check the edge function logs in the Supabase Dashboard for the full error details. Each log includes a timestamp and error message to help diagnose the problem.
